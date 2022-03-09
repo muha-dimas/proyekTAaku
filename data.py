@@ -5,7 +5,7 @@ import glob
 
 class dataProcess(object):
     def __init__(self, out_rows, out_cols, data_path="./data/train/images", label_path="./data/train/labels",
-                 test_path="./data/test/images", npy_path="./data/npydata", img_type="png"):
+                 test_path="./data/test/images", npy_path="./data/npydata", img_type="jpg"):
         self.out_rows = out_rows
         self.out_cols = out_cols
         self.data_path = data_path
