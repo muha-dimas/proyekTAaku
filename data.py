@@ -4,8 +4,8 @@ import glob
 
 
 class dataProcess(object):
-    def __init__(self, out_rows, out_cols, data_path= os.getcwd() + "./data/train/images", label_path= os.getcwd() + "./data/train/labels",
-                 test_path= os.getcwd() + "./data/test/images", npy_path=os.getcwd() + "./data/npydata", img_type="jpg"):
+    def __init__(self, out_rows, out_cols, data_path="./data/train/images", label_path="./data/train/labels",
+                 test_path="./data/test/images", npy_path="./data/npydata", img_type="png"):
         self.out_rows = out_rows
         self.out_cols = out_cols
         self.data_path = data_path
