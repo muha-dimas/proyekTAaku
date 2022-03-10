@@ -243,11 +243,11 @@ class myUnet(object):
         print("loading data")
         imgs_train, imgs_mask_train, imgs_test = self.load_data()
         print("loading data done")
-        model = self.get_unet()
+        model = self.get_unet_jacard()
         print("got unet")
-        model_checkpoint = ModelCheckpoint('unet_jacard.hdf5', monitor='loss', verbose=1, save_best_only=True)
+        model_checkpoint = ModelCheckpoint('unet_jacard.hdf5', monitor='val_jacard_coef', verbose=1, save_best_only=True)
         print('Fitting model...')
-        model.fit(imgs_train, imgs_mask_train, batch_size=4, epochs=20, verbose=1,
+        history_jacard=model.fit(imgs_train, imgs_mask_train, batch_size=4, epochs=20, verbose=1,
                   validation_split=0.2, shuffle=True, callbacks=[model_checkpoint])
         model.save_weights('./unet_model_jacard.hdf5')
         print('predict test data')
