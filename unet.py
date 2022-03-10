@@ -5,7 +5,7 @@ from tensorflow.keras.layers import *
 from tensorflow.keras.optimizers import *
 from tensorflow.keras.callbacks import ModelCheckpoint
 from tensorflow.keras.preprocessing.image import array_to_img
-from tensorflow.keras import backend as K
+import tensorflow.compat.v1.keras.backend as K
 import cv2
 from data import *
 
