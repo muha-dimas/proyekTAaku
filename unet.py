@@ -118,7 +118,104 @@ class myUnet(object):
         model.compile(optimizer=Adam(lr=1e-4), loss='binary_crossentropy', metrics=['accuracy'])
 
         return model
+    def get_unet_jacard(self):
+        inputs = Input((self.img_rows, self.img_cols, 3))
 
+        conv1 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(inputs)
+        # print(conv1)
+        conv1 = BatchNormalization()(conv1)
+        print ("conv1 shape:", conv1.shape)
+        conv1 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv1)
+        conv1 = BatchNormalization()(conv1)
+        print ("conv1 shape:", conv1.shape)
+        pool1 = MaxPooling2D(pool_size=(2, 2))(conv1)
+        print ("pool1 shape:", pool1.shape)
+
+        conv2 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')(pool1)
+        print ("conv2 shape:", conv2.shape)
+        conv2 = BatchNormalization()(conv2)
+        conv2 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv2)
+        print ("conv2 shape:", conv2.shape)
+        conv2 = BatchNormalization()(conv2)
+        pool2 = MaxPooling2D(pool_size=(2, 2))(conv2)
+        print ("pool2 shape:", pool2.shape)
+
+        conv3 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(pool2)
+        print ("conv3 shape:", conv3.shape)
+        conv3 = BatchNormalization()(conv3)
+        conv3 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv3)
+        print ("conv3 shape:", conv3.shape)
+        conv3 = BatchNormalization()(conv3)
+        pool3 = MaxPooling2D(pool_size=(2, 2))(conv3)
+        print ("pool3 shape:", pool3.shape)
+
+        conv4 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(pool3)
+        conv4 = BatchNormalization()(conv4)
+        conv4 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv4)
+        conv4 = BatchNormalization()(conv4)
+        drop4 = Dropout(0.5)(conv4)
+        pool4 = MaxPooling2D(pool_size=(2, 2))(drop4)
+
+        conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(pool4)
+        conv5 = BatchNormalization()(conv5)
+        conv5 = Conv2D(1024, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv5)
+        conv5 = BatchNormalization()(conv5)
+        drop5 = Dropout(0.5)(conv5)
+
+        up6 = Conv2D(512, 2, activation='relu', padding='same', kernel_initializer='he_normal')(UpSampling2D(size=(2, 2))(drop5))
+        up6 = BatchNormalization()(up6)
+        merge6 = concatenate([drop4, up6], axis=3)
+        print(up6)
+        print(merge6)
+        conv6 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge6)
+        print(conv6)
+        conv6 = BatchNormalization()(conv6)
+        conv6 = Conv2D(512, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv6)
+        print(conv6)
+        conv6 = BatchNormalization()(conv6)
+        up7 = Conv2D(256, 2, activation='relu', padding='same', kernel_initializer='he_normal')(
+            UpSampling2D(size=(2, 2))(conv6))
+        up7 = BatchNormalization()(up7)
+        merge7 = concatenate([conv3, up7], axis=3)
+        print(up7)
+        print(merge7)
+        conv7 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge7)
+        conv7 = BatchNormalization()(conv7)
+        print(conv7)
+        conv7 = Conv2D(256, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv7)
+        print(conv7)
+        conv7 = BatchNormalization()(conv7)
+        up8 = Conv2D(128, 2, activation='relu', padding='same', kernel_initializer='he_normal')(
+            UpSampling2D(size=(2, 2))(conv7))
+        up8 = BatchNormalization()(up8)
+        merge8 = concatenate([conv2, up8], axis=3)
+        conv8 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge8)
+        conv8 = BatchNormalization()(conv8)
+        conv8 = Conv2D(128, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv8)
+        conv8 = BatchNormalization()(conv8)
+        up9 = Conv2D(64, 2, activation='relu', padding='same', kernel_initializer='he_normal')(
+            UpSampling2D(size=(2, 2))(conv8))
+        up9 = BatchNormalization()(up9)
+        merge9 = concatenate([conv1, up9], axis=3)
+        print(up9)
+        print(merge9)
+        conv9 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(merge9)
+        conv9 = BatchNormalization()(conv9)
+        print(conv9)
+        conv9 = Conv2D(64, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv9)
+        conv9 = BatchNormalization()(conv9)
+        print(conv9)
+        conv9 = Conv2D(2, 3, activation='relu', padding='same', kernel_initializer='he_normal')(conv9)
+        conv9 = BatchNormalization()(conv9)
+        print ("conv9 shape:", conv9.shape)
+
+        conv10 = Conv2D(1, 1, activation='sigmoid')(conv9)
+        print(conv10)
+        model = Model(inputs=inputs, outputs=conv10)
+
+        model.compile(optimizer=Adam(lr=1e-4), loss = [jacard_coef_loss], metrics = [jacard_coef])
+        return model
+    
     def train(self):
         print("loading data")
         imgs_train, imgs_mask_train, imgs_test = self.load_data()
@@ -127,13 +224,28 @@ class myUnet(object):
         print("got unet")
         model_checkpoint = ModelCheckpoint('unet.hdf5', monitor='loss', verbose=1, save_best_only=True)
         print('Fitting model...')
-        model.fit(imgs_train, imgs_mask_train, batch_size=4, epochs=100, verbose=1,
+        model.fit(imgs_train, imgs_mask_train, batch_size=4, epochs=20, verbose=1,
                   validation_split=0.2, shuffle=True, callbacks=[model_checkpoint])
         model.save_weights('./unet_model.hdf5')
         print('predict test data')
         imgs_mask_test = model.predict(imgs_test, batch_size=1, verbose=1)
         np.save('./data/results/imgs_mask_test.npy', imgs_mask_test)
-
+        
+    def train_jacard(self):
+        print("loading data")
+        imgs_train, imgs_mask_train, imgs_test = self.load_data()
+        print("loading data done")
+        model = self.get_unet()
+        print("got unet")
+        model_checkpoint = ModelCheckpoint('unet_jacard.hdf5', monitor='loss', verbose=1, save_best_only=True)
+        print('Fitting model...')
+        model.fit(imgs_train, imgs_mask_train, batch_size=4, epochs=20, verbose=1,
+                  validation_split=0.2, shuffle=True, callbacks=[model_checkpoint])
+        model.save_weights('./unet_model_jacard.hdf5')
+        print('predict test data')
+        imgs_mask_test = model.predict(imgs_test, batch_size=1, verbose=1)
+        np.save('./data/results/imgs_mask_test_jacard.npy', imgs_mask_test)
+        
     def save_img(self):
         print("array to image")
         imgs = np.load('./data/results/imgs_mask_test.npy')
@@ -155,14 +267,25 @@ class myUnet(object):
             
     def load_model_weights(self, model):
         model.load_weights('./unet_model.hdf5')
+        
+    def jacard_coef(y_true, y_pred):
+    y_true_f = K.flatten(y_true)
+    y_pred_f = K.flatten(y_pred)
+    intersection = K.sum(y_true_f * y_pred_f)
+    return (intersection + 1.0) / (K.sum(y_true_f) + K.sum(y_pred_f) - intersection + 1.0)
 
 
-if __name__ == '__main__':
-    myunet = myUnet()
-    model = myunet.get_unet()
+    def jacard_coef_loss(y_true, y_pred):
+        return -jacard_coef(y_true, y_pred)  # -1 multiplied as we want to minimize this value as loss function
+
+
+#if __name__ == '__main__':
+    #myunet = myUnet()
+    #model = myunet.get_unet()
+    #model_jacard = myunet.get_unet_jacard()
     # model.summary()
     # plot_model(model, to_file='model.png')
     # Uncomment the below line if you want to re-train a previously trained model 
     # myunet.load_model_weights(model)
-    myunet.train()
-    myunet.save_img()
+    #myunet.train()
+    #myunet.save_img()
