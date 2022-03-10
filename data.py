@@ -87,7 +87,7 @@ class dataProcess(object):
 
 
 
-if __name__ == "__main__":
-    mydata = dataProcess(512, 512)
-    mydata.create_train_data()
-    mydata.create_test_data()
+#if __name__ == "__main__":
+    #mydata = dataProcess(512, 512)
+    #mydata.create_train_data()
+    #mydata.create_test_data()
