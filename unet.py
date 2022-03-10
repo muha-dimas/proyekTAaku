@@ -19,7 +19,16 @@ class myUnet(object):
         imgs_train, imgs_mask_train = mydata.load_train_data()
         imgs_test = mydata.load_test_data()
         return imgs_train, imgs_mask_train, imgs_test
+    
+    def jacard_coef(y_true, y_pred):
+        y_true_f = K.flatten(y_true)
+        y_pred_f = K.flatten(y_pred)
+        intersection = K.sum(y_true_f * y_pred_f)
+        return (intersection + 1.0) / (K.sum(y_true_f) + K.sum(y_pred_f) - intersection + 1.0)
 
+    def jacard_coef_loss(y_true, y_pred):
+        return -jacard_coef(y_true, y_pred)  # -1 multiplied as we want to minimize this value as loss function
+    
     def get_unet(self):
         inputs = Input((self.img_rows, self.img_cols, 3))
 
@@ -267,16 +276,6 @@ class myUnet(object):
             
     def load_model_weights(self, model):
         model.load_weights('./unet_model.hdf5')
-        
-    def jacard_coef(y_true, y_pred):
-        y_true_f = K.flatten(y_true)
-        y_pred_f = K.flatten(y_pred)
-        intersection = K.sum(y_true_f * y_pred_f)
-        return (intersection + 1.0) / (K.sum(y_true_f) + K.sum(y_pred_f) - intersection + 1.0)
-
-
-    def jacard_coef_loss(y_true, y_pred):
-        return -jacard_coef(y_true, y_pred)  # -1 multiplied as we want to minimize this value as loss function
 
 
 #if __name__ == '__main__':
